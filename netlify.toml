@@ -1,0 +1,37 @@
+[build]
+  command = "pnpm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "11.9.0"
+
+[[redirects]]
+  from = "/services/copper-tool"
+  to = "/resources/copper-buying-guide/"
+  status = 301
+
+[[redirects]]
+  from = "/services/copper-tool/"
+  to = "/resources/copper-buying-guide/"
+  status = 301
+
+[[redirects]]
+  from = "/services/copper-purchase-tool"
+  to = "/resources/copper-buying-guide/"
+  status = 301
+
+[[redirects]]
+  from = "/services/copper-purchase-tool/"
+  to = "/resources/copper-buying-guide/"
+  status = 301
+
+[[redirects]]
+  from = "/copper-tool"
+  to = "/resources/copper-buying-guide/"
+  status = 301
+
+[[redirects]]
+  from = "/copper-tool/"
+  to = "/resources/copper-buying-guide/"
+  status = 301
