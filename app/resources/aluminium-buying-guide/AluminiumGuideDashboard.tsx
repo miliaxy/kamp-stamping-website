@@ -17,6 +17,7 @@ const currentEntry = allHistory.at(-1)!;
 const previousEntry = allHistory.at(-2) ?? currentEntry;
 const currentPrice = currentEntry.price;
 const currentEffectiveDate = new Date(`${currentEntry.effectiveDate}T00:00:00Z`);
+const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
 const last30DaysStart = new Date(currentEffectiveDate);
 last30DaysStart.setUTCDate(last30DaysStart.getUTCDate() - 29);
@@ -30,6 +31,17 @@ const billingPeriodStart = new Date(
   ),
 );
 
+const previousBillingPeriodStart = new Date(
+  Date.UTC(
+    billingPeriodStart.getUTCFullYear(),
+    billingPeriodStart.getUTCMonth() - 1,
+    21,
+  ),
+);
+const previousBillingPeriodEnd = new Date(
+  billingPeriodStart.getTime() - millisecondsPerDay,
+);
+
 const last30DaysHistory = allHistory.filter((entry) => {
   const entryDate = new Date(`${entry.effectiveDate}T00:00:00Z`);
   return entryDate >= last30DaysStart && entryDate <= currentEffectiveDate;
@@ -40,9 +52,48 @@ const billingPeriodHistory = allHistory.filter((entry) => {
   return entryDate >= billingPeriodStart && entryDate <= currentEffectiveDate;
 });
 
-const recentWindow = allHistory.slice(-3);
-const recentAverage =
-  recentWindow.reduce((sum, entry) => sum + entry.price, 0) / recentWindow.length;
+const effectiveEntryOn = (date: Date) =>
+  allHistory.findLast(
+    (entry) => new Date(`${entry.effectiveDate}T00:00:00Z`) <= date,
+  );
+
+const businessDayPrices = (start: Date, end: Date) => {
+  const dailyPrices: { date: Date; price: number }[] = [];
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    const weekday = cursor.getUTCDay();
+    if (weekday !== 0 && weekday !== 6) {
+      const effectiveEntry = effectiveEntryOn(cursor);
+      if (effectiveEntry) {
+        dailyPrices.push({
+          date: new Date(cursor),
+          price: effectiveEntry.price,
+        });
+      }
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return dailyPrices;
+};
+
+const averagePrice = (dailyPrices: { price: number }[]) =>
+  dailyPrices.reduce((sum, entry) => sum + entry.price, 0) / dailyPrices.length;
+
+const billingPeriodDailyPrices = businessDayPrices(
+  billingPeriodStart,
+  currentEffectiveDate,
+);
+const previousBillingPeriodDailyPrices = businessDayPrices(
+  previousBillingPeriodStart,
+  previousBillingPeriodEnd,
+);
+const billingPeriodAverage = averagePrice(billingPeriodDailyPrices);
+const previousBillingPeriodAverage = averagePrice(previousBillingPeriodDailyPrices);
+const billingPeriodOpeningPrice =
+  billingPeriodDailyPrices[0]?.price ?? currentPrice;
+
 const last30DaysOpeningEntry = last30DaysHistory[0] ?? currentEntry;
 const last30DaysHighEntry = last30DaysHistory.reduce(
   (highest, entry) => (entry.price > highest.price ? entry : highest),
@@ -83,42 +134,54 @@ const formatPercent = (value: number) =>
 const formatPeriod = (start: Date, end: Date) =>
   `${monthDayFormatter.format(start)} – ${dayMonthYearFormatter.format(end)}`;
 
+const formatShortPeriod = (start: Date, end: Date) =>
+  `${monthDayFormatter.format(start)} – ${monthDayFormatter.format(end)}`;
+
+const trendDirection = (value: number) =>
+  value > 0.25 ? "Rising ↑" : value < -0.25 ? "Falling ↓" : "Flat →";
+
 export default function AluminiumGuideDashboard() {
   const [quantity, setQuantity] = useState(2.5);
   const [analysisView, setAnalysisView] = useState<AnalysisView>("billing");
 
   const orderValue = currentPrice * quantity;
-  const recentAverageOrderValue = recentAverage * quantity;
+  const billingPeriodAverageOrderValue = billingPeriodAverage * quantity;
+  const billingPeriodChange =
+    ((currentPrice - billingPeriodOpeningPrice) / billingPeriodOpeningPrice) * 100;
   const last30DaysChange =
     ((currentPrice - last30DaysOpeningEntry.price) / last30DaysOpeningEntry.price) * 100;
   const changeSincePrevious =
     ((currentPrice - previousEntry.price) / previousEntry.price) * 100;
   const changeFromLast30DaysHigh =
     ((currentPrice - last30DaysHigh) / last30DaysHigh) * 100;
-  const changeFromRecentAverage =
-    ((currentPrice - recentAverage) / recentAverage) * 100;
-  const comparisonDifference = recentAverageOrderValue - orderValue;
+  const changeFromBillingPeriodAverage =
+    ((currentPrice - billingPeriodAverage) / billingPeriodAverage) * 100;
+  const comparisonDifference = billingPeriodAverageOrderValue - orderValue;
   const latestIsBelowAverage = comparisonDifference >= 0;
   const averagePosition =
-    changeFromRecentAverage < 0 ? "below" : changeFromRecentAverage > 0 ? "above" : "equal to";
+    changeFromBillingPeriodAverage < 0
+      ? "below"
+      : changeFromBillingPeriodAverage > 0
+        ? "above"
+        : "equal to";
 
   const signal =
-    changeFromRecentAverage > 0.35
+    changeFromBillingPeriodAverage > 0.35
       ? {
           short: "Firming",
-          headline: "firming above the last 3 published prices average",
-          explanation: "The latest price is above the last 3 published prices average.",
+          headline: "firming above the billing period average",
+          explanation: "The latest price is above the current billing period average.",
         }
-      : changeFromRecentAverage < -0.35
+      : changeFromBillingPeriodAverage < -0.35
         ? {
             short: "Easing",
-            headline: "easing below the last 3 published prices average",
-            explanation: "The latest price is below the last 3 published prices average.",
+            headline: "easing below the billing period average",
+            explanation: "The latest price is below the current billing period average.",
           }
         : {
             short: "Steady",
-            headline: "steady near the last 3 published prices average",
-            explanation: "The latest price remains close to the last 3 published prices average.",
+            headline: "steady near the billing period average",
+            explanation: "The latest price remains close to the current billing period average.",
           };
 
   const chartHistory =
@@ -188,19 +251,19 @@ export default function AluminiumGuideDashboard() {
               <p>Effective {currentEntry.displayDate}</p>
             </article>
             <article className="aluminium-metric">
-              <span>Last 3 published prices average</span>
-              <strong>{formatRupees(recentAverage)}<small>/MT</small></strong>
-              <p>Publications dated {recentWindow.map((entry) => entry.date).join(", ")}</p>
+              <span>Billing period avg</span>
+              <strong>{formatRupees(billingPeriodAverage)}<small>/MT</small></strong>
+              <p>
+                {monthDayFormatter.format(billingPeriodStart)} – today ·{" "}
+                {billingPeriodDailyPrices.length} days
+              </p>
             </article>
             <article className="aluminium-metric">
-              <span>Last 30-day high</span>
-              <strong>{formatRupees(last30DaysHigh)}<small>/MT</small></strong>
-              <p>
-                {last30DaysHighEntry.displayDate} ·{" "}
-                {currentPrice === last30DaysHigh
-                  ? "latest price matches the high"
-                  : `latest is ${Math.abs(changeFromLast30DaysHigh).toFixed(1)}% lower`}
-              </p>
+              <span>Billing period trend</span>
+              <strong className={billingPeriodChange > 0 ? "value-higher" : billingPeriodChange < 0 ? "value-lower" : ""}>
+                {formatPercent(billingPeriodChange)}
+              </strong>
+              <p>{trendDirection(billingPeriodChange)}</p>
             </article>
             <article className="aluminium-metric">
               <span>Price per kilogram</span>
@@ -215,11 +278,29 @@ export default function AluminiumGuideDashboard() {
               <p>Vs {previousEntry.displayDate} · {formatSignedRupees(currentPrice - previousEntry.price)}/MT</p>
             </article>
             <article className="aluminium-metric">
-              <span>Last 30 days trend</span>
+              <span>Prev period avg</span>
+              <strong>{formatRupees(previousBillingPeriodAverage)}<small>/MT</small></strong>
+              <p>
+                {formatShortPeriod(previousBillingPeriodStart, previousBillingPeriodEnd)} ·{" "}
+                {previousBillingPeriodDailyPrices.length} days
+              </p>
+            </article>
+            <article className="aluminium-metric">
+              <span>30-day trend</span>
               <strong className={last30DaysChange > 0 ? "value-higher" : last30DaysChange < 0 ? "value-lower" : ""}>
                 {formatPercent(last30DaysChange)}
               </strong>
-              <p>From {last30DaysOpeningEntry.displayDate} to {currentEntry.displayDate}</p>
+              <p>{trendDirection(last30DaysChange)}</p>
+            </article>
+            <article className="aluminium-metric">
+              <span>Last 30-day high</span>
+              <strong>{formatRupees(last30DaysHigh)}<small>/MT</small></strong>
+              <p>
+                {last30DaysHighEntry.displayDate} ·{" "}
+                {currentPrice === last30DaysHigh
+                  ? "latest price matches the high"
+                  : `latest is ${Math.abs(changeFromLast30DaysHigh).toFixed(1)}% lower`}
+              </p>
             </article>
           </div>
         </section>
@@ -252,12 +333,12 @@ export default function AluminiumGuideDashboard() {
               <p>{formatRupees(currentPrice)}/MT · {currentEntry.date}</p>
             </article>
             <article className="aluminium-metric">
-              <span>At last 3 prices average</span>
-              <strong>{formatLakhs(recentAverageOrderValue)}</strong>
-              <p>{formatRupees(recentAverage)}/MT</p>
+              <span>At billing period average</span>
+              <strong>{formatLakhs(billingPeriodAverageOrderValue)}</strong>
+              <p>{formatRupees(billingPeriodAverage)}/MT</p>
             </article>
             <article className="aluminium-metric">
-              <span>Latest vs 3-price average</span>
+              <span>Latest vs period average</span>
               <strong>{formatLakhs(Math.abs(comparisonDifference))}</strong>
               <p>Latest price is {latestIsBelowAverage ? "lower" : "higher"}</p>
             </article>
@@ -272,8 +353,8 @@ export default function AluminiumGuideDashboard() {
             <div>
               <h4 id="directional-signal-title">Directional signal: {signal.headline}</h4>
               <p>
-                The latest price is {Math.abs(changeFromRecentAverage).toFixed(1)}%{" "}
-                {averagePosition} the last 3 published prices average and{" "}
+                The latest price is {Math.abs(changeFromBillingPeriodAverage).toFixed(1)}%{" "}
+                {averagePosition} the current billing period average and{" "}
                 {currentPrice === last30DaysHigh
                   ? "matches the last 30-day high"
                   : `${Math.abs(changeFromLast30DaysHigh).toFixed(1)}% below the ${last30DaysHighEntry.date} 30-day high`}
@@ -350,9 +431,15 @@ export default function AluminiumGuideDashboard() {
                       </div>
                     );
                   })}
-                  {chartPoints.map((point) => (
+                  {chartPoints.map((point, index) => (
                     <div
-                      className="aluminium-line-chart__point"
+                      className={`aluminium-line-chart__point${
+                        index === 0
+                          ? " is-first"
+                          : index === chartPoints.length - 1
+                            ? " is-last"
+                            : ""
+                      }`}
                       key={point.effectiveDate}
                       style={{ left: `${point.x}%`, bottom: `${point.y}%` }}
                       title={`${point.displayDate}: ${formatRupees(point.price)}/MT`}
@@ -363,9 +450,15 @@ export default function AluminiumGuideDashboard() {
                       <i />
                     </div>
                   ))}
-                  {chartPoints.map((point) => (
+                  {chartPoints.map((point, index) => (
                     <span
-                      className="aluminium-line-chart__date"
+                      className={`aluminium-line-chart__date${
+                        index === 0
+                          ? " is-first"
+                          : index === chartPoints.length - 1
+                            ? " is-last"
+                            : ""
+                      }`}
                       key={`date-${point.effectiveDate}`}
                       style={{ left: `${point.x}%` }}
                     >
@@ -374,6 +467,18 @@ export default function AluminiumGuideDashboard() {
                   ))}
                 </div>
               </div>
+            </div>
+            <div className="aluminium-chart-mobile-summary" aria-hidden="true">
+              <span>
+                <small>Start</small>
+                <strong>{formatRupees(chartHistory[0].price)}/MT</strong>
+                <small>{chartHistory[0].date}</small>
+              </span>
+              <span>
+                <small>Latest</small>
+                <strong>{formatRupees(currentPrice)}/MT</strong>
+                <small>{currentEntry.date}</small>
+              </span>
             </div>
             <p className="aluminium-analysis__note">
               Current Billing Period follows the same 21st–20th cycle used in the Copper
@@ -425,8 +530,9 @@ export default function AluminiumGuideDashboard() {
           </p>
           <p>
             The charts use the official Primary Aluminium Products Price Ready Reckoners
-            dated {allHistory[0].displayDate}–{currentEntry.displayDate}. Prices are published
-            on selected dates, so gaps do not mean the price was unchanged.
+            dated {allHistory[0].displayDate}–{currentEntry.displayDate}. Billing-period averages
+            use weekdays, carrying each effective price forward until the next publication.
+            Chart points show publication dates only.
           </p>
         </footer>
       </div>
