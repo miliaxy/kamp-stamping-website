@@ -11,10 +11,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/about-us/",
     "/resources/",
     "/resources/copper-buying-guide/",
+    "/resources/aluminium-buying-guide/",
     "/contact/",
   ].map((path, index) => ({
     url: `${base}${path}`,
     changeFrequency: index === 0 ? "monthly" : "yearly",
-    priority: index === 0 ? 1 : path.includes("copper") ? 0.5 : path === "/resources/" ? 0.6 : 0.8,
+    priority: index === 0 ? 1 : path.includes("buying-guide") ? 0.5 : path === "/resources/" ? 0.6 : 0.8,
   }));
 }

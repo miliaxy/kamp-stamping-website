@@ -1,0 +1,77 @@
+{
+  "product": "6201 Alloy Wire Rod - Dia 9.5 mm (HAC-1)",
+  "source_page": "https://www.hindalco.com/businesses/aluminium/primary-aluminium/primary-metal-price",
+  "updated_at": "2026-07-30T14:00:00Z",
+  "prices": [
+    {
+      "effective_date": "2026-07-01",
+      "short_date": "1 Jul",
+      "display_date": "1 Jul 2026",
+      "price_per_mt": 376000,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-01-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-11",
+      "short_date": "11 Jul",
+      "display_date": "11 Jul 2026",
+      "price_per_mt": 382250,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-11-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-15",
+      "short_date": "15 Jul",
+      "display_date": "15 Jul 2026",
+      "price_per_mt": 386500,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-15-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-16",
+      "short_date": "16 Jul",
+      "display_date": "16 Jul 2026",
+      "price_per_mt": 385000,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-16-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-17",
+      "short_date": "17 Jul",
+      "display_date": "17 Jul 2026",
+      "price_per_mt": 387250,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-17-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-18",
+      "short_date": "18 Jul",
+      "display_date": "18 Jul 2026",
+      "price_per_mt": 385750,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-18-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-22",
+      "short_date": "22 Jul",
+      "display_date": "22 Jul 2026",
+      "price_per_mt": 387750,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-22-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-25",
+      "short_date": "25 Jul",
+      "display_date": "25 Jul 2026",
+      "price_per_mt": 384250,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-25-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-29",
+      "short_date": "29 Jul",
+      "display_date": "29 Jul 2026",
+      "price_per_mt": 380000,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-29-july-2026.pdf"
+    },
+    {
+      "effective_date": "2026-07-30",
+      "short_date": "30 Jul",
+      "display_date": "30 Jul 2026",
+      "price_per_mt": 384500,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-30-july-2026.pdf"
+    }
+  ]
+}

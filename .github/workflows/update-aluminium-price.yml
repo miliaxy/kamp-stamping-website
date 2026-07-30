@@ -1,0 +1,43 @@
+name: Update Hindalco aluminium price
+
+on:
+  schedule:
+    - cron: "17 */3 * * 1-6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-hindalco-aluminium-price
+  cancel-in-progress: false
+
+jobs:
+  update-price:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the website
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the PDF reader
+        run: python -m pip install "pypdf>=5,<7"
+
+      - name: Check Hindalco for new publications
+        run: python scripts/update_aluminium_prices.py
+
+      - name: Publish an updated data snapshot
+        run: |
+          if git diff --quiet -- app/resources/aluminium-buying-guide/aluminium-prices.json; then
+            echo "No new Hindalco publication."
+            exit 0
+          fi
+          git config user.name "KAMP price updater"
+          git config user.email "actions@users.noreply.github.com"
+          git add app/resources/aluminium-buying-guide/aluminium-prices.json
+          git commit -m "Update Hindalco aluminium price"
+          git push

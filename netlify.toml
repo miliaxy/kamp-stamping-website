@@ -35,3 +35,13 @@
   from = "/copper-tool/"
   to = "/resources/copper-buying-guide/"
   status = 301
+
+[[redirects]]
+  from = "/resources/aluminum-buying-guide"
+  to = "/resources/aluminium-buying-guide/"
+  status = 301
+
+[[redirects]]
+  from = "/resources/aluminum-buying-guide/"
+  to = "/resources/aluminium-buying-guide/"
+  status = 301

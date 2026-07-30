@@ -49,6 +49,22 @@ Netlify reads the build configuration from `netlify.toml`. Updates to the
 production branch can be built and published automatically after the repository
 is connected to the Netlify project.
 
+## Automatic aluminium price updates
+
+The Aluminium Buying Guide reads its published-price history from
+`app/resources/aluminium-buying-guide/aluminium-prices.json`.
+
+The `Update Hindalco aluminium price` GitHub Actions workflow checks Hindalco's
+official Primary Aluminium price page every three hours, Monday through
+Saturday. When it finds a new Ready Reckoner, it extracts and validates the
+6201 Alloy Wire Rod - Dia 9.5 mm (HAC-1) basic price, updates the JSON snapshot,
+and pushes the change. The repository push triggers the normal Netlify build,
+so no manual deployment is required after the automation is enabled.
+
+The updater fails closed: an unavailable page, missing product row, unexpected
+redirect, oversized file, implausible price, or abnormally large price movement
+causes the workflow to stop without replacing the last valid website data.
+
 ## Ownership
 
 Website content and imagery © KAMP Stamping Pvt. Ltd.
