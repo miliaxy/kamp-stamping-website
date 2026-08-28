@@ -1,7 +1,7 @@
 {
   "product": "6201 Alloy Wire Rod - Dia 9.5 mm (HAC-1)",
   "source_page": "https://www.hindalco.com/businesses/aluminium/primary-aluminium/primary-metal-price",
-  "updated_at": "2026-08-27T14:08:21+00:00",
+  "updated_at": "2026-08-28T15:18:38+00:00",
   "prices": [
     {
       "effective_date": "2026-06-16",
@@ -212,6 +212,13 @@
       "display_date": "27 Aug 2026",
       "price_per_mt": 382500,
       "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-27-august-2026.pdf"
+    },
+    {
+      "effective_date": "2026-08-28",
+      "short_date": "28 Aug",
+      "display_date": "28 Aug 2026",
+      "price_per_mt": 380250,
+      "source_url": "https://www.hindalco.com/Upload/PDF/primary-ready-reckoner-28-august-2026.pdf"
     }
   ]
 }
